@@ -56,7 +56,10 @@ If you get `unauthorized`:
 
 ## Scheduling Alarms (Caregiver)
 - Open caregiver UI → Set Reminders → "Schedule Alarm" → choose time.
-- Sends: `OPPAM_ALARM:<alarmId>|<timeInMillis>|<messageMl>` to elder.
+- Basic format: `OPPAM_ALARM:<alarmId>|<timeInMillis>|<messageMl>`
+- Extended format (optional): `OPPAM_ALARM:<alarmId>|<timeInMillis>|<messageMl>|<intervalSeconds>|<maxMisses>`
+	- `intervalSeconds`: default 300 (5 minutes) for repeated reminders
+	- `maxMisses`: default 3; after this many misses, caregiver gets an escalation SMS
 - Elder phone shows toast “അലാറം ഷെഡ്യൂൾ ചെയ്തു …” and rings at time.
 
 ## Location Sharing (Elder)
@@ -84,8 +87,17 @@ If numbers were entered wrong:
 
 ## Protocols
 - Instant reminder: `OPPAM:<message>`
-- Scheduled alarm: `OPPAM_ALARM:<id>|<timeInMillis>|<message>`
+- Scheduled alarm:
+	- Basic: `OPPAM_ALARM:<id>|<timeInMillis>|<message>`
+	- Extended: `OPPAM_ALARM:<id>|<timeInMillis>|<message>|<intervalSeconds>|<maxMisses>`
 - Location update: `OPPAM_LOC:<lat>,<lng>|<accuracy>|<timestamp>`
+
+## Reminder Flow
+- Ring: 5s tone + vibration + Malayalam TTS.
+- Verify: Elder sees YES/NO.
+- YES: sends caregiver a confirmation SMS, stops.
+- NO or no response: marks status, reschedules next alert after exactly 5 minutes.
+- Escalation: when misses reach `maxMisses`, caregiver receives a 🚨 escalation SMS (includes last known location if available).
 
 ## Notes
 - Foreground-service type `location`; no background tracking.
