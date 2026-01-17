@@ -1,0 +1,37 @@
+<!-- 
+EMERGENCY CALL MONITORING - STRING RESOURCES
+These are ADDITIONAL strings for the optional emergency call feature.
+They do NOT replace or modify any existing strings.
+-->
+<resources>
+    <!-- Emergency Call Feature - Malayalam -->
+    <string name="emergency_feature_name_ml">എമർജൻസി കോൾ സംരക്ഷണം</string>
+    <string name="emergency_consent_title_ml">സുരക്ഷാ സവിശേഷത</string>
+    <string name="emergency_consent_message_ml">കോളുകൾ സമയത്ത് അപകട സൂചനകൾ കണ്ടെത്തി കെയർഗിവറിന് അറിയിക്കും. ഓഡിയോ റെക്കോർഡ് ചെയ്യില്ല.</string>
+    <string name="emergency_panic_button_ml">അടിയന്തിരാവസ്ഥയാണോ?</string>
+    <string name="emergency_sos_ml">SOS അയയ്ക്കുക</string>
+    
+    <!-- Emergency Call Feature - English -->
+    <string name="emergency_feature_name_en">Emergency Call Protection</string>
+    <string name="emergency_consent_title_en">Safety Feature</string>
+    <string name="emergency_consent_message_en">Detects distress during calls and alerts caregiver. No audio is recorded.</string>
+    <string name="emergency_monitoring_active">Emergency monitoring active</string>
+    <string name="emergency_alert_sent">Emergency alert sent to caregiver</string>
+    
+    <!-- Privacy Assurance -->
+    <string name="privacy_no_recording">No audio recording</string>
+    <string name="privacy_realtime_only">Real-time analysis only</string>
+    <string name="privacy_no_storage">No conversation storage</string>
+    <string name="privacy_can_disable">Can be disabled anytime</string>
+    
+    <!-- Settings -->
+    <string name="emergency_settings_title">Emergency Call Settings</string>
+    <string name="emergency_enable">Enable Emergency Monitoring</string>
+    <string name="emergency_disable_confirm">Disable emergency monitoring?</string>
+    <string name="emergency_disable_message">This will stop monitoring calls for distress.</string>
+    
+    <!-- Alerts -->
+    <string name="distress_keyword_detected">Distress keyword detected</string>
+    <string name="long_silence_detected">Unusual silence detected</string>
+    <string name="manual_panic_triggered">Manual emergency alert</string>
+</resources>

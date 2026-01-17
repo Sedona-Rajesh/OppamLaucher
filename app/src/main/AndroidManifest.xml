@@ -2,6 +2,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- EMERGENCY CALL MONITORING PERMISSIONS (OPTIONAL FEATURE) -->
+    <!-- These permissions are ONLY used if the user explicitly enables emergency monitoring -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Location sharing permissions (foreground only, consent-based) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Android 14+ foreground service location permission -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -23,6 +46,83 @@
             </intent-filter>
 
         </activity>
+        
+        <!-- ALARM ACTIVITY FOR CAREGIVER REMINDERS -->
+        <activity
+            android:name=".alarm.AlarmActivity"
+            android:exported="false"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.OppamLauncher" />
+
+        <!-- EMERGENCY CALL MONITOR SERVICE (NEW - OPTIONAL FEATURE) -->
+        <!-- This service is ONLY started when user explicitly enables emergency monitoring -->
+        <!-- It operates independently and does NOT affect existing app functionality -->
+        <service
+            android:name=".emergency.EmergencyCallMonitorService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="phoneCall" />
+        
+        <!-- AI COMPANION SERVICE (NEW) -->
+        <!-- Background service for health check-ins and reminders -->
+        <service
+            android:name=".services.CompanionService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- Foreground location sharing service -->
+        <service
+            android:name=".location.LocationSharingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+        
+        <!-- SMS RECEIVER FOR CAREGIVER REMINDERS -->
+        <receiver
+            android:name=".sms.SMSReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+        
+        <!-- ALARM RECEIVER FOR SCHEDULED ALARMS -->
+        <receiver
+            android:name=".alarm.AlarmReceiver"
+            android:exported="false" />
+        
+        <!-- FOLLOW-UP RECEIVER FOR 5-MIN NOTIFICATIONS -->
+        <receiver
+            android:name=".alarm.FollowUpReceiver"
+            android:exported="false" />
+            
+        <!-- FOLLOW-UP ACTION RECEIVER -->
+        <receiver
+            android:name=".alarm.FollowUpActionReceiver"
+            android:exported="false" />
+        
+        <!-- BOOT RECEIVER FOR ALARM PERSISTENCE -->
+        <receiver
+            android:name=".alarm.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Utility receiver to force logout and show login UI (for setup/reset) -->
+        <receiver
+            android:name=".auth.ForceLogoutReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.oppam.oppamlauncher.FORCE_LOGOUT" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
