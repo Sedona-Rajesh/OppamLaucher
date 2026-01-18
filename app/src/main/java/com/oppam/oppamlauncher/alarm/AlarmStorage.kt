@@ -24,8 +24,11 @@ class AlarmStorage(context: Context) {
         val message: String,
         val timeInMillis: Long,
         val repeatDaily: Boolean = false,
-        val status: String = "scheduled", // scheduled, dismissed, snoozed, missed
-        val dismissedAt: Long = 0L
+        val status: String = "scheduled", // scheduled, dismissed, snoozed, missed, triggered, confirmed, not_completed, no_response
+        val dismissedAt: Long = 0L,
+        val intervalSeconds: Int = 300, // default 5 minutes
+        val maxMisses: Int = 3,
+        val missedCount: Int = 0
     )
     
     /**
@@ -55,7 +58,10 @@ class AlarmStorage(context: Context) {
                     timeInMillis = obj.getLong("timeInMillis"),
                     repeatDaily = obj.optBoolean("repeatDaily", false),
                     status = obj.optString("status", "scheduled"),
-                    dismissedAt = obj.optLong("dismissedAt", 0L)
+                    dismissedAt = obj.optLong("dismissedAt", 0L),
+                    intervalSeconds = obj.optInt("intervalSeconds", 300),
+                    maxMisses = obj.optInt("maxMisses", 3),
+                    missedCount = obj.optInt("missedCount", 0)
                 )
             )
         }
@@ -77,6 +83,9 @@ class AlarmStorage(context: Context) {
                 put("repeatDaily", alarm.repeatDaily)
                 put("status", alarm.status)
                 put("dismissedAt", alarm.dismissedAt)
+                put("intervalSeconds", alarm.intervalSeconds)
+                put("maxMisses", alarm.maxMisses)
+                put("missedCount", alarm.missedCount)
             }
             jsonArray.put(obj)
         }
@@ -112,6 +121,24 @@ class AlarmStorage(context: Context) {
             }
         }
         saveAllAlarms(alarms)
+    }
+
+    fun incrementMissedCount(alarmId: Int): Int {
+        var updatedMisses = 0
+        val alarms = getAllAlarms().map { alarm ->
+            if (alarm.id == alarmId) {
+                updatedMisses = alarm.missedCount + 1
+                alarm.copy(missedCount = updatedMisses)
+            } else {
+                alarm
+            }
+        }
+        saveAllAlarms(alarms)
+        return updatedMisses
+    }
+
+    fun getAlarm(alarmId: Int): ScheduledAlarm? {
+        return getAllAlarms().find { it.id == alarmId }
     }
     
     /**

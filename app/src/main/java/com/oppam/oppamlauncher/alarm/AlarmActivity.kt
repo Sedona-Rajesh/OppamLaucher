@@ -333,14 +333,16 @@ class AlarmActivity : ComponentActivity() {
             val alarmStorage = AlarmStorage(this)
             alarmStorage.updateAlarmStatus(alarmId, "not_completed")
         }
-        
+
         // Send notification SMS to caregiver
         sendNonCompletionSMS()
-        
-        // Keep alarm active - replay reminder after short delay
-        handler.postDelayed({
-            speakReminderMessage()
-        }, 5000)
+
+        // Reschedule next reminder according to interval and handle escalation
+        rescheduleOrEscalate()
+
+        // Stop current alarm UI
+        stopAlarm()
+        finish()
     }
     
     private fun handleNoResponse() {
@@ -353,8 +355,9 @@ class AlarmActivity : ComponentActivity() {
             alarmStorage.updateAlarmStatus(alarmId, "no_response")
         }
         
-        // SOS SMS disabled per requirement (alarm SMS only). Keep local alert.
-        
+        // Reschedule next reminder according to interval and handle escalation
+        rescheduleOrEscalate()
+
         // Stop alarm and finish
         stopAlarm()
         finish()
@@ -455,6 +458,73 @@ class AlarmActivity : ComponentActivity() {
             
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send SOS messages", e)
+        }
+    }
+
+    private fun rescheduleOrEscalate() {
+        if (alarmId == -1) return
+
+        try {
+            val storage = AlarmStorage(this)
+            val existing = storage.getAlarm(alarmId)
+            // Snooze/reschedule should be exactly 5 minutes regardless of original interval
+            val snoozeSeconds = 300
+            val maxMisses = existing?.maxMisses ?: 3
+
+            val newMisses = storage.incrementMissedCount(alarmId)
+            Log.d(TAG, "Missed count for $alarmId updated to $newMisses (max $maxMisses)")
+
+            if (newMisses >= maxMisses) {
+                Log.w(TAG, "Missed threshold reached; sending escalation SMS")
+                sendEscalationSMS(newMisses, maxMisses)
+            }
+
+            val nextTime = System.currentTimeMillis() + snoozeSeconds * 1000L
+            val updated = AlarmStorage.ScheduledAlarm(
+                id = alarmId,
+                message = message,
+                timeInMillis = nextTime,
+                intervalSeconds = existing?.intervalSeconds ?: snoozeSeconds,
+                maxMisses = maxMisses,
+                missedCount = newMisses,
+                status = "scheduled"
+            )
+            storage.saveAlarm(updated)
+            AlarmScheduler.scheduleAlarm(this, alarmId, message, nextTime)
+            Log.d(TAG, "Rescheduled alarm $alarmId for ${Date(nextTime)} with fixed snooze 300s (5 min)")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to reschedule or escalate", e)
+        }
+    }
+
+    private fun sendEscalationSMS(currentMisses: Int, maxMisses: Int) {
+        try {
+            val userPrefs = UserPreferences(this)
+            val caregiverPhone = userPrefs.getCaregiverPhone()
+            val elderName = userPrefs.getUserName()
+
+            if (caregiverPhone.isEmpty()) {
+                Log.e(TAG, "Cannot send escalation SMS - caregiver phone not set")
+                return
+            }
+
+            // Include last known location if available
+            val loc = com.oppam.oppamlauncher.status.LocationStatus(this).get()
+            val locText = if (loc != null) {
+                " Last location: ${loc.lat}, ${loc.lng} (±${loc.accuracy}m)."
+            } else ""
+
+            val sms = "🚨 Escalation: $elderName missed $currentMisses/$maxMisses reminders for: $message.$locText"
+            val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                getSystemService(SmsManager::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                SmsManager.getDefault()
+            }
+            smsManager.sendTextMessage(caregiverPhone, null, sms, null, null)
+            Log.d(TAG, "Escalation SMS sent to caregiver: $caregiverPhone")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send escalation SMS", e)
         }
     }
     

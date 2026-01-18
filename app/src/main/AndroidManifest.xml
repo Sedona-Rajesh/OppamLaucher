@@ -22,6 +22,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Android 14+ foreground service location permission -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
@@ -92,6 +93,15 @@
         <receiver
             android:name=".alarm.AlarmReceiver"
             android:exported="false" />
+
+        <!-- DEBUG SCHEDULER RECEIVER: allows scheduling a test alarm via ADB broadcast -->
+        <receiver
+            android:name=".alarm.DebugScheduleReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.oppam.oppamlauncher.SCHEDULE_TEST_ALARM" />
+            </intent-filter>
+        </receiver>
         
         <!-- FOLLOW-UP RECEIVER FOR 5-MIN NOTIFICATIONS -->
         <receiver
@@ -120,6 +130,15 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="com.oppam.oppamlauncher.FORCE_LOGOUT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Platform configuration receiver: set caregiver platform webhook URL via broadcast -->
+        <receiver
+            android:name=".platform.PlatformConfigReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.oppam.oppamlauncher.SET_PLATFORM_URL" />
             </intent-filter>
         </receiver>
 

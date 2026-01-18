@@ -22,6 +22,7 @@ class UserPreferences(context: Context) {
         private const val KEY_LINKED_ELDER_NAME = "linked_elder_name"
         private const val KEY_CAREGIVER_PHONE = "caregiver_phone"
         private const val KEY_CAREGIVER_NAME = "caregiver_name"
+        private const val KEY_CAREGIVER_PLATFORM_URL = "caregiver_platform_url"
     }
     
     // Login state
@@ -75,6 +76,13 @@ class UserPreferences(context: Context) {
     
     fun setCaregiverName(name: String) {
         prefs.edit().putString(KEY_CAREGIVER_NAME, name).apply()
+    }
+
+    // Optional: Caregiver platform webhook URL to receive location updates
+    fun getCaregiverPlatformUrl(): String = prefs.getString(KEY_CAREGIVER_PLATFORM_URL, "") ?: ""
+
+    fun setCaregiverPlatformUrl(url: String) {
+        prefs.edit().putString(KEY_CAREGIVER_PLATFORM_URL, url).apply()
     }
     
     // Complete registration

@@ -65,7 +65,28 @@ If you get `unauthorized`:
 ## Location Sharing (Elder)
 - Tap "Share Location" → a foreground notification appears.
 - First GPS fix sends one `OPPAM_LOC:lat,lng|accuracy|timestamp` SMS to caregiver.
+- If a caregiver platform webhook URL is set, the same fix is also POSTed as JSON.
 - Caregiver sees last location; map if Google Play services are available.
+
+### Configure Caregiver Platform Webhook (optional)
+Set a webhook endpoint to receive JSON payloads when location is shared:
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" -s <DEVICE_ID> shell am broadcast -a com.oppam.oppamlauncher.SET_PLATFORM_URL --es url "https://your-platform.example/api/oppam/location"
+```
+Payload example (JSON):
+```json
+{
+	"type": "OPPAM_LOC",
+	"lat": 10.12345,
+	"lng": 76.54321,
+	"accuracy": 12.3,
+	"timestamp": 1737090000000,
+	"elderName": "Appachan",
+	"elderPhone": "+91xxxxxxxxxx",
+	"caregiverName": "Caregiver",
+	"caregiverPhone": "+91yyyyyyyyyy"
+}
+```
 
 ## Reset to Login (Broadcast)
 If numbers were entered wrong:

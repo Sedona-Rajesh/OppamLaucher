@@ -53,7 +53,14 @@ class LocationSharingService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var stopRunnable: Runnable? = null
     private val status by lazy { LocationStatus(this) }
-    private val transmitter: LocationTransmitter by lazy { SMSLocationTransmitter() }
+    private val transmitter: LocationTransmitter by lazy {
+        CompositeLocationTransmitter(
+            listOf(
+                SMSLocationTransmitter(),
+                WebhookLocationTransmitter()
+            )
+        )
+    }
     private var hasSentOnce: Boolean = false
 
     override fun onBind(intent: Intent?): IBinder? = null

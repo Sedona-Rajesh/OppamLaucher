@@ -57,28 +57,42 @@ class SMSReceiver : BroadcastReceiver() {
                             Log.d(TAG, "Processing scheduled alarm - ABORTING SMS BROADCAST")
                             // Scheduled alarm
                             val parts = message.substringAfter("OPPAM_ALARM:").split("|")
-                            if (parts.size == 3) {
-                                val alarmId = parts[0].toInt()
-                                val timeInMillis = parts[1].toLong()
-                                val alarmMessage = parts[2]
-                                
-                                Log.d(TAG, "Alarm parsed: ID=$alarmId, Time=$timeInMillis, Msg='$alarmMessage'")
-                                
-                                val alarm = AlarmStorage.ScheduledAlarm(alarmId, alarmMessage, timeInMillis)
-                                alarmStorage.saveAlarm(alarm)
-                                Log.d(TAG, "Alarm saved to storage.")
-                                
-                                AlarmScheduler.scheduleAlarm(context, alarmId, alarmMessage, timeInMillis)
-                                Log.d(TAG, "Alarm scheduled with AlarmManager.")
-                                
-                                // ACK disabled to reduce SMS load per updated requirements.
-                                
-                                // Show immediate notification that alarm was scheduled
-                                android.widget.Toast.makeText(
-                                    context,
-                                    "അലാറം ഷെഡ്യൂൾ ചെയ്തു: $alarmMessage",
-                                    android.widget.Toast.LENGTH_LONG
-                                ).show()
+                            if (parts.size >= 3) {
+                                try {
+                                    val alarmId = parts[0].toInt()
+                                    val timeInMillis = parts[1].toLong()
+                                    val alarmMessage = parts[2]
+
+                                    // Optional: intervalSeconds and maxMisses for escalation
+                                    val intervalSeconds = if (parts.size >= 4) parts[3].toIntOrNull() ?: 300 else 300
+                                    val maxMisses = if (parts.size >= 5) parts[4].toIntOrNull() ?: 3 else 3
+
+                                    Log.d(TAG, "Alarm parsed: ID=$alarmId, Time=$timeInMillis, Msg='$alarmMessage', Interval=$intervalSeconds, MaxMisses=$maxMisses")
+
+                                    val alarm = AlarmStorage.ScheduledAlarm(
+                                        id = alarmId,
+                                        message = alarmMessage,
+                                        timeInMillis = timeInMillis,
+                                        intervalSeconds = intervalSeconds,
+                                        maxMisses = maxMisses
+                                    )
+                                    alarmStorage.saveAlarm(alarm)
+                                    Log.d(TAG, "Alarm saved to storage.")
+
+                                    AlarmScheduler.scheduleAlarm(context, alarmId, alarmMessage, timeInMillis)
+                                    Log.d(TAG, "Alarm scheduled with AlarmManager.")
+
+                                    // ACK disabled to reduce SMS load per updated requirements.
+
+                                    // Show immediate notification that alarm was scheduled
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "അലാറം ഷെഡ്യൂൾ ചെയ്തു: $alarmMessage",
+                                        android.widget.Toast.LENGTH_LONG
+                                    ).show()
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "Failed to parse OPPAM_ALARM payload", e)
+                                }
                             } else {
                                 Log.e(TAG, "Invalid OPPAM_ALARM format. Parts count: ${parts.size}")
                             }
